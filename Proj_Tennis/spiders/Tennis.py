@@ -9,14 +9,23 @@ class ProjTennisSpider(Spider):
     start_urls = ['https://www.atptour.com/en/rankings/singles?rankDate=2020-02-03&rankRange=1-5000']
     def parse(self, response):
         result_urls = response.xpath('//tbody/tr/td[4]/a/@href').extract()
-        result_urls = ['https://www.atptour.com' + i for i in result_urls]
+        #all overview stats
+        stats_urls = ['https://www.atptour.com' + i for i in result_urls]
+        #finals stats (no longer used)
+        t = map(lambda x: x.replace('overview', 'titles-and-finals'), result_urls)
+        finals_urls = ['https://www.atptour.com' + i for i in t]
 
-        for url in result_urls:
-            yield Request(url=url, callback=self.parse_review)
+        #get all overview stats
+        for url in stats_urls:
+            yield Request(url=url, callback=self.parse_stats)
+            
+        #get finals stats
+        #for url in finals_urls[1:10]:
+            #yield Request(url=url, callback=self.parse_finals
 
-    def parse_review(self, response):
+    def parse_stats(self, response):
         
-        # pull review data
+        # pull stats data
         f_name = response.xpath('//div[@class="first-name"]/text()').extract_first().strip()
         l_name = response.xpath('//div[@class="last-name"]/text()').extract_first().strip()
         age = response.xpath('//tr[1]/td[1]/div/div[@class="table-big-value"]/text()').extract_first().strip()
@@ -35,8 +44,14 @@ class ProjTennisSpider(Spider):
         loss_career = response.xpath('//tr[2]/td[3]/div[1]/text()').extract()[3].split('-')[1].split()
         titles_career = response.xpath('//tr[2]/td[4]/div[1]/text()').extract()[3].strip()
         prize_career = float(re.sub(r'[^\d.]', '',response.xpath('//tr[2]/td[5]/div[1]/text()').extract_first().strip()))
-
-        # create review item
+        if response.xpath('//tr[2]/td[3]/div/div[@class="table-value"]/text()').extract_first().strip()=='':#ck if blank
+            l_hand = ''
+            backhand = ''
+        else:
+            l_hand = response.xpath('//tr[2]/td[3]/div/div[@class="table-value"]/text()').extract_first().split(',')[0].strip() 
+            backhand = response.xpath('//tr[2]/td[3]/div/div[@class="table-value"]/text()').extract_first().split(',')[1].strip() 
+        
+        # create item-stats
         item = ProjTennisItem()
         item['f_name'] = f_name
         item['l_name'] = l_name
@@ -51,6 +66,25 @@ class ProjTennisSpider(Spider):
         item['loss_career'] = loss_career
         item['titles_career'] = titles_career
         item['prize_career'] = prize_career
+        item['l_hand'] = l_hand
+        item['backhand'] = backhand
+        #yield item
+        
+        #add new tab for additional piece (titles and finals)
+        t = response.url.replace('overview','titles-and-finals')
+        request = yield Request(t,meta={'my_meta_item':item},callback=self.parse_finals)
+        
+    def parse_finals(self, response):
+        
+        item = response.meta['my_meta_item']
+        # pull finals data
+        t = response.xpath('//*[@id="singlesDropdown"]/ul/li[2]/text()').extract_first().strip()
+        finals_career = int(t[t.find("(")+1:t.find(")")])
+        
+        # create item-finals
+        #item = ProjTennisItem()
+        item['finals_career'] = finals_career
         yield item
-
+        
+        
 
