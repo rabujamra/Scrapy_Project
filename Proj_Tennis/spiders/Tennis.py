@@ -66,7 +66,7 @@ class ProjTennisSpider(Spider):
         item['backhand'] = backhand
         #yield item
         
-        #add new tab (titles and finals) to get additional piece (finals)
+        #add new tab (titles and finals) to get finals data
         t = response.url.replace('overview','titles-and-finals')
         request = yield Request(t,meta={'my_meta_item':item},callback=self.parse_finals)
         
