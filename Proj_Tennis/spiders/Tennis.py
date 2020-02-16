@@ -12,16 +12,12 @@ class ProjTennisSpider(Spider):
         #all overview stats
         stats_urls = ['https://www.atptour.com' + i for i in result_urls]
         #finals stats (no longer used)
-        t = map(lambda x: x.replace('overview', 'titles-and-finals'), result_urls)
-        finals_urls = ['https://www.atptour.com' + i for i in t]
+        #t = map(lambda x: x.replace('overview', 'titles-and-finals'), result_urls)
+        #finals_urls = ['https://www.atptour.com' + i for i in t]
 
         #get all overview stats
-        for url in stats_urls:
+        for url in stats_urls[1:10]:
             yield Request(url=url, callback=self.parse_stats)
-            
-        #get finals stats
-        #for url in finals_urls[1:10]:
-            #yield Request(url=url, callback=self.parse_finals
 
     def parse_stats(self, response):
         
@@ -70,7 +66,7 @@ class ProjTennisSpider(Spider):
         item['backhand'] = backhand
         #yield item
         
-        #add new tab for additional piece (titles and finals)
+        #add new tab (titles and finals) to get additional piece (finals)
         t = response.url.replace('overview','titles-and-finals')
         request = yield Request(t,meta={'my_meta_item':item},callback=self.parse_finals)
         
