@@ -16,7 +16,7 @@ class ProjTennisSpider(Spider):
         #finals_urls = ['https://www.atptour.com' + i for i in t]
 
         #get all overview stats
-        for url in stats_urls[1:10]:
+        for url in stats_urls:
             yield Request(url=url, callback=self.parse_stats)
 
     def parse_stats(self, response):
@@ -34,12 +34,12 @@ class ProjTennisSpider(Spider):
             birthplace = ''
         else:
             birthplace = response.xpath('//tr[2]/td[1]/div/div[@class="table-value"]/text()').extract_first().rsplit(',', 1)[1].strip() 
-        rank_2020 = response.xpath('//tr[1]/td[2]/div[1]/text()').extract()[3].strip()
-        rank_career = response.xpath('//tr[2]/td[2]/div[1]/text()').extract()[3].strip()
-        win_career = response.xpath('//tr[2]/td[3]/div[1]/text()').extract()[3].split('-')[0].split()
-        loss_career = response.xpath('//tr[2]/td[3]/div[1]/text()').extract()[3].split('-')[1].split()
-        titles_career = response.xpath('//tr[2]/td[4]/div[1]/text()').extract()[3].strip()
-        prize_career = float(re.sub(r'[^\d.]', '',response.xpath('//tr[2]/td[5]/div[1]/text()').extract_first().strip()))
+        rank_2020 = int(response.xpath('//tr[1]/td[2]/div[1]/@data-singles').extract_first()) #.strip()
+        rank_career = int(response.xpath('//tr[2]/td[2]/div[1]/@data-singles').extract_first()) #[3].strip()
+        win_career = int(response.xpath('//tr[2]/td[3]/div[1]/@data-singles').extract_first().split('-')[0])
+        loss_career = int(response.xpath('//tr[2]/td[3]/div[1]/@data-singles').extract_first().split('-')[1])
+        titles_career = int(response.xpath('//tr[2]/td[4]/div[1]/@data-singles').extract_first()) #[3].strip()
+        prize_career = float(re.sub(r'[^\d.]', '',response.xpath('//tr[2]/td[5]/div[1]/@data-singles').extract_first()))
         if response.xpath('//tr[2]/td[3]/div/div[@class="table-value"]/text()').extract_first().strip()=='':#ck if blank
             l_hand = ''
             backhand = ''
